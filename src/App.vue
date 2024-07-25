@@ -1,30 +1,117 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import { uid } from 'uid';
+import { onMounted, reactive, ref, watch } from 'vue';
+import Form from './components/Form.vue';
+import Header from './components/Header.vue';
+import Patient from './components/Patient.vue';
+const patients =ref([])
+
+const patient = reactive({
+  id:null,
+    pet: "",
+    owner: "",
+    email: "",
+    date: "",
+    symtomp: ""
+
+
+})
+watch(patients,()=>{
+    saveLocal()
+  },{
+    deep:true
+  })
+
+  const saveLocal=()=>{
+    localStorage.setItem('patients',JSON.stringify(patients.value))
+    console.log('savong')
+  }
+onMounted(()=>{
+  const savedItem= localStorage.getItem('patients')
+  if(savedItem){
+    patients.value=JSON.parse(savedItem)
+  }
+})
+
+const addPatient=()=>{
+console.log(patients)
+  if(patient.id){
+    //update
+    let index= patients.value.findIndex(i=>i.id===patient.id)
+
+    console.log(index)
+    patients.value[index]={...patient}
+  }
+  else{
+    patients.value.push({...patient,id:uid()})
+
+
+  }
+
+
+  patient.pet=''
+patient.owner=''
+patient.email=''
+patient.date=''
+patient.symtomp=''
+patient.id=null
+
+  
+}
+
+
+const updateCard=(id)=>{
+  const patientEdit = patients.value.filter((e)=>e.id===id)[0]
+  Object.assign(patient,patientEdit)
+  
+}
+const deleteCard=(id)=>{
+
+   patients.value =  patients.value.filter(e=>e.id!==id)
+
+}
+
 </script>
 
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+
+<div class=" container mx-auto mt-20">
+  <Header/>
+  <div class="mt-12 md:flex">
+
+    <Form
+    v-model:pet="patient.pet"
+    v-model:owner="patient.owner"
+    v-model:email="patient.email"
+    v-model:date="patient.date"
+    v-model:symtomp="patient.symtomp"
+    @add-patient="addPatient"
+    :id="patient.id"
+
+
+    ></Form>
+    <div class="md:w-1/2 md:h-screen overflow-y-scroll">
+
+      <h3 class="text-3xl text-center font-bold "> Admin your patients </h3>
+      <p class="text-2xl text-center font-bold " >info<span class="text-indigo-500"> patients </span></p>
+      
+
+      <div v-if="patients.length>0" >
+        <Patient
+        v-for="patient in patients"
+        :patient="patient"
+        @update-card="updateCard"
+        @delete-card ="deleteCard"
+        />
+
+      </div>
+      <p v-else class="text-center py-5 text-2xl text-red-400">
+        There are no patiens
+      </p>
+
+    </div>
+
   </div>
-  <HelloWorld msg="Vite + Vue" />
+</div>
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
